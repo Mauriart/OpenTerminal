@@ -1,3 +1,5 @@
+> **Fork en español.** Esta versión de OpenTerminal muestra la interfaz en español neutro de Latinoamérica: títulos, botones, filtros, estados vacíos, atajos y el asistente de IA. Los términos de mercado habituales (ticker, RSI, MACD, VWAP, Bollinger, OHLC, P/E, bid/ask) se mantienen, con una pista en español cuando ayuda. Los datos externos —titulares y nombres de empresas— no se traducen. El idioma por defecto está en `web/lib/i18n.ts` (`locale`); cámbialo a `"en"` para volver al inglés.
+
 <div align="center">
 
 # OpenTerminal

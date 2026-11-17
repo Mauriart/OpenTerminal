@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { apiGet } from "../lib/api";
+import { formatTime, t } from "../lib/i18n";
 import { useTerminal } from "../store/terminal";
 
 type Status = {
@@ -23,7 +24,7 @@ function Clock({ tz, label }: { tz: string; label: string }) {
     <span className="dim">
       {label}{" "}
       <span className="text-[var(--text)]">
-        {now.toLocaleTimeString("en-GB", { timeZone: tz, hour12: false })}
+        {formatTime(now, { timeZone: tz })}
       </span>
     </span>
   );
@@ -34,7 +35,7 @@ function marketStateNY(): { label: string; open: boolean } {
   const day = ny.getDay();
   const mins = ny.getHours() * 60 + ny.getMinutes();
   const open = day >= 1 && day <= 5 && mins >= 570 && mins < 960; // 09:30–16:00
-  return { label: open ? "NYSE OPEN" : "NYSE CLOSED", open };
+  return { label: open ? t("topbar.nyseOpen") : t("topbar.nyseClosed"), open };
 }
 
 export default function TopBar() {
@@ -61,13 +62,13 @@ export default function TopBar() {
         className="term-btn flex-1 max-w-md text-left dim"
         onClick={() => setCommandOpen(true)}
       >
-        {activeSymbol} — search symbol… <span className="float-right">⌘K</span>
+        {t("topbar.search", { symbol: activeSymbol })} <span className="float-right">⌘K</span>
       </button>
       <span className="dim ml-auto">
-        feeds:{" "}
+        {t("topbar.feeds")}{" "}
         {healthy.length > 0
           ? healthy.map((p) => `${p.name} ${p.lastLatencyMs ?? "—"}ms`).join(" · ")
-          : "connecting…"}
+          : t("topbar.connecting")}
       </span>
       <span className={status?.ai ? "up" : "dim"}>AI {status?.ai ? "●" : "○"}</span>
     </header>

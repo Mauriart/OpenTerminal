@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import GridLayout, { WidthProvider } from "react-grid-layout";
 import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
+import { t, widgetTitle } from "../lib/i18n";
 import { normalizeSymbol } from "../lib/symbol";
 import { useTerminal, type WidgetInstance } from "../store/terminal";
 import QuoteWidget from "./widgets/QuoteWidget";
@@ -82,7 +83,7 @@ function SymbolTag({ widget, activeSymbol }: { widget: WidgetInstance; activeSym
   return (
     <span
       className="ml-2 text-[var(--text)] cursor-pointer hover:text-[var(--amber)]"
-      title="Click to set this widget's ticker"
+      title={t("workspace.setTicker")}
       onMouseDown={(e) => e.stopPropagation()}
       onClick={() => setEditing(true)}
     >
@@ -90,13 +91,6 @@ function SymbolTag({ widget, activeSymbol }: { widget: WidgetInstance; activeSym
     </span>
   );
 }
-
-const TITLES: Record<string, string> = {
-  quote: "Quote", chart: "Chart", watchlist: "Watchlist", news: "News",
-  heatmap: "Heatmap", screener: "Screener", crypto: "Crypto",
-  macro: "Macro / Indexes", options: "Option Chain", portfolio: "Portfolio", ai: "AI Assistant",
-  calendar: "Calendar", insider: "Insider Transactions", tv: "Live TV", recap: "Market Recap",
-};
 
 export default function Workspace() {
   const widgets = useTerminal((s) => s.widgets);
@@ -123,13 +117,13 @@ export default function Workspace() {
           <div className="terminal-panel">
             <div className="panel-title">
               <span>
-                {TITLES[w.type]}
+                {widgetTitle(w.type)}
                 {symbolAware.has(w.type) && <SymbolTag widget={w} activeSymbol={activeSymbol} />}
               </span>
               <span className="flex gap-2 items-center">
                 {symbolAware.has(w.type) && (
                   <button
-                    title={w.linked ? "Linked to active symbol (click to unlink)" : "Unlinked (click to link)"}
+                    title={w.linked ? t("workspace.linked") : t("workspace.unlinked")}
                     onMouseDown={(e) => e.stopPropagation()}
                     onClick={() => toggleLinked(w.id)}
                     className={w.linked ? "text-[var(--amber)]" : "dim"}
@@ -140,6 +134,7 @@ export default function Workspace() {
                 <button
                   onMouseDown={(e) => e.stopPropagation()}
                   onClick={() => removeWidget(w.id)}
+                  title={t("common.close")}
                   className="dim hover:text-[var(--down)]"
                 >
                   ✕
@@ -147,7 +142,7 @@ export default function Workspace() {
               </span>
             </div>
             <div className="flex-1 overflow-auto min-h-0">
-              <WidgetErrorBoundary name={TITLES[w.type]}>
+              <WidgetErrorBoundary name={widgetTitle(w.type)}>
                 <WidgetBody widget={w} />
               </WidgetErrorBoundary>
             </div>

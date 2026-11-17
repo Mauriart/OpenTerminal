@@ -11,11 +11,12 @@ function getClient(): Anthropic {
   return client;
 }
 
-const SYSTEM = `You are the AI assistant inside OpenTerminal, a Bloomberg-style financial terminal.
-You help the user interpret market data, charts, news, options chains and macro indicators.
-Answer concisely and professionally, in the language the user writes in.
-When market data is provided in the conversation as JSON context, ground your answer in it.
-You are not a licensed financial advisor: never give personalized investment advice or tell the user what to buy or sell.`;
+const SYSTEM = `Eres el asistente de IA dentro de OpenTerminal, un terminal financiero al estilo Bloomberg.
+Ayudas al usuario a interpretar datos de mercado, gráficos, noticias, cadenas de opciones e indicadores macro.
+Responde de forma concisa y profesional, en español neutro de Latinoamérica.
+Si el usuario escribe en otro idioma, responde en ese idioma.
+Cuando la conversación incluya datos de mercado como contexto JSON, basa tu respuesta en ellos.
+No eres un asesor financiero autorizado: nunca des consejos de inversión personalizados ni le digas al usuario qué comprar o vender.`;
 
 aiRouter.post("/chat", async (req, res) => {
   const { messages, context } = req.body ?? {};
@@ -24,7 +25,7 @@ aiRouter.post("/chat", async (req, res) => {
   }
   try {
     const contextBlock = context
-      ? [{ role: "user" as const, content: `Current terminal context (JSON):\n${JSON.stringify(context)}` }]
+      ? [{ role: "user" as const, content: `Contexto actual del terminal (JSON):\n${JSON.stringify(context)}` }]
       : [];
     const response = await getClient().messages.create({
       model: process.env.ANTHROPIC_MODEL ?? "claude-opus-4-8",
@@ -34,7 +35,7 @@ aiRouter.post("/chat", async (req, res) => {
       messages: [...contextBlock, ...messages],
     });
     if (response.stop_reason === "refusal") {
-      return res.json({ text: "The assistant declined to answer this request." });
+      return res.json({ text: "El asistente rechazó responder esta solicitud." });
     }
     const text = response.content
       .filter((b) => b.type === "text")

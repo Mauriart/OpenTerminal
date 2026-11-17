@@ -599,7 +599,7 @@ marketRouter.get("/sectors", async (req, res) => {
 const RECAP_TTL = 15_000;
 
 function pct(n: number | null | undefined): string {
-  if (n === null || n === undefined) return "flat";
+  if (n === null || n === undefined) return "sin cambio";
   return `${n >= 0 ? "+" : ""}${n.toFixed(2)}%`;
 }
 
@@ -615,26 +615,26 @@ function buildRecapSummary(d: {
   const qqq = d.indexes.find((i) => i.symbol === "QQQ");
   const dia = d.indexes.find((i) => i.symbol === "DIA");
   const spyChange = spy?.changePercent ?? 0;
-  const dir = spyChange > 0.15 ? "trading higher" : spyChange < -0.15 ? "trading lower" : "little changed";
+  const dir = spyChange > 0.15 ? "al alza" : spyChange < -0.15 ? "a la baja" : "casi sin cambios";
 
   const parts: string[] = [];
   parts.push(
-    `US stocks are ${dir}, with the S&P 500 ${pct(spy?.changePercent)}, the Nasdaq 100 ${pct(qqq?.changePercent)} and the Dow ${pct(dia?.changePercent)}.`
+    `Las acciones de EE. UU. operan ${dir}: el S&P 500 ${pct(spy?.changePercent)}, el Nasdaq 100 ${pct(qqq?.changePercent)} y el Dow ${pct(dia?.changePercent)}.`
   );
   if (d.bestSector && d.worstSector && d.bestSector.sector !== d.worstSector.sector) {
     parts.push(
-      `${d.bestSector.sector} is leading sector performance (${pct(d.bestSector.avgChangePercent)}), while ${d.worstSector.sector} lags (${pct(d.worstSector.avgChangePercent)}).`
+      `${d.bestSector.sector} lidera el desempeño sectorial (${pct(d.bestSector.avgChangePercent)}), mientras que ${d.worstSector.sector} queda rezagado (${pct(d.worstSector.avgChangePercent)}).`
     );
   }
   if (d.gainers[0] && d.losers[0]) {
     parts.push(
-      `${d.gainers[0].name} paces advancers, up ${pct(d.gainers[0].changePercent)}, while ${d.losers[0].name} is the biggest decliner, down ${pct(
+      `${d.gainers[0].name} encabeza las alzas, con ${pct(d.gainers[0].changePercent)}, y ${d.losers[0].name} es la mayor baja, con ${pct(
         d.losers[0].changePercent
       )}.`
     );
   }
   if (d.vix !== null) {
-    parts.push(`The VIX volatility index is at ${d.vix.toFixed(2)}.`);
+    parts.push(`El índice de volatilidad VIX está en ${d.vix.toFixed(2)}.`);
   }
   return parts.join(" ");
 }
