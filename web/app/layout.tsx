@@ -1,15 +1,16 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Providers from "./providers";
+import { locale, t } from "../lib/i18n";
 
 export const metadata: Metadata = {
   title: "OpenTerminal",
-  description: "Bloomberg-style financial terminal on free data sources",
+  description: t("meta.description"),
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang={locale === "es" ? "es" : "en"}>
       <body>
         <Providers>{children}</Providers>
       </body>

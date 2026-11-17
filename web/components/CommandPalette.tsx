@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { apiGet } from "../lib/api";
+import { instrumentType, t } from "../lib/i18n";
 import { useTerminal } from "../store/terminal";
 
 type SearchResult = { symbol: string; name: string; exchange: string; type: string };
@@ -60,7 +61,7 @@ export default function CommandPalette() {
             if (e.key === "ArrowUp") setSelected((s) => Math.max(s - 1, 0));
             if (e.key === "Enter" && results[selected]) pick(results[selected], e.shiftKey);
           }}
-          placeholder="Ticker, company, ETF, crypto, index…  (Enter = load · Shift+Enter = load + watchlist)"
+          placeholder={t("command.placeholder")}
           className="w-full !border-0 !border-b !border-[var(--border)] px-3 py-2 text-[13px]"
         />
         <div className="max-h-80 overflow-auto">
@@ -75,11 +76,11 @@ export default function CommandPalette() {
               <span className="w-24 font-bold">{r.symbol}</span>
               <span className="flex-1 truncate">{r.name}</span>
               <span className="dim">{r.exchange}</span>
-              <span className="dim w-16 text-right">{r.type}</span>
+              <span className="dim w-16 text-right">{instrumentType(r.type)}</span>
             </div>
           ))}
           {query && results.length === 0 && (
-            <div className="px-3 py-3 dim">No results for “{query}”</div>
+            <div className="px-3 py-3 dim">{t("command.empty", { query })}</div>
           )}
         </div>
       </div>

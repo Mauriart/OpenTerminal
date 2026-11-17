@@ -1,8 +1,14 @@
+import { translateApiError } from "./i18n";
+
+function errorFromResponse(status: number, body: { error?: string }): Error {
+  return new Error(translateApiError(body.error ?? `HTTP ${status}`));
+}
+
 export async function apiGet<T>(path: string): Promise<T> {
   const res = await fetch(path);
   if (!res.ok) {
     const body = await res.json().catch(() => ({}));
-    throw new Error(body.error ?? `HTTP ${res.status}`);
+    throw errorFromResponse(res.status, body);
   }
   return res.json();
 }
@@ -15,14 +21,14 @@ export async function apiPost<T>(path: string, body: unknown): Promise<T> {
   });
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));
-    throw new Error(data.error ?? `HTTP ${res.status}`);
+    throw errorFromResponse(res.status, data);
   }
   return res.json();
 }
 
 export async function apiDelete(path: string): Promise<void> {
   const res = await fetch(path, { method: "DELETE" });
-  if (!res.ok && res.status !== 204) throw new Error(`HTTP ${res.status}`);
+  if (!res.ok && res.status !== 204) throw new Error(translateApiError(`HTTP ${res.status}`));
 }
 
 export type Quote = {

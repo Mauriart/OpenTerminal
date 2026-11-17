@@ -1,23 +1,24 @@
 "use client";
 
+import { navLabel, t } from "../lib/i18n";
 import { useTerminal, type WidgetType } from "../store/terminal";
 
-const ITEMS: Array<{ type: WidgetType; label: string; key: string }> = [
-  { type: "chart", label: "CHART", key: "⌥1" },
-  { type: "quote", label: "QUOTE", key: "⌥2" },
-  { type: "news", label: "NEWS", key: "⌥3" },
-  { type: "screener", label: "SCREENER", key: "⌥4" },
-  { type: "heatmap", label: "HEATMAP", key: "⌥5" },
-  { type: "crypto", label: "CRYPTO", key: "⌥6" },
-  { type: "options", label: "OPTIONS", key: "⌥7" },
-  { type: "portfolio", label: "PORTFOLIO", key: "⌥8" },
-  { type: "ai", label: "AI ASSIST", key: "⌥9" },
-  { type: "watchlist", label: "WATCHLIST", key: "" },
-  { type: "macro", label: "MACRO", key: "" },
-  { type: "calendar", label: "CALENDAR", key: "" },
-  { type: "insider", label: "INSIDER", key: "" },
-  { type: "tv", label: "LIVE TV", key: "" },
-  { type: "recap", label: "MARKET RECAP", key: "" },
+const ITEMS: Array<{ type: WidgetType; key: string }> = [
+  { type: "chart", key: "⌥1" },
+  { type: "quote", key: "⌥2" },
+  { type: "news", key: "⌥3" },
+  { type: "screener", key: "⌥4" },
+  { type: "heatmap", key: "⌥5" },
+  { type: "crypto", key: "⌥6" },
+  { type: "options", key: "⌥7" },
+  { type: "portfolio", key: "⌥8" },
+  { type: "ai", key: "⌥9" },
+  { type: "watchlist", key: "" },
+  { type: "macro", key: "" },
+  { type: "calendar", key: "" },
+  { type: "insider", key: "" },
+  { type: "tv", key: "" },
+  { type: "recap", key: "" },
 ];
 
 export default function Sidebar() {
@@ -27,7 +28,7 @@ export default function Sidebar() {
   return (
     <nav className="w-32 bg-[var(--panel)] border-r border-[var(--border)] flex flex-col shrink-0">
       <div className="dim px-2 py-1 text-[10px] uppercase tracking-wider border-b border-[var(--border)]">
-        Add widget
+        {t("nav.add")}
       </div>
       {ITEMS.map((item) => (
         <button
@@ -35,7 +36,7 @@ export default function Sidebar() {
           onClick={() => addWidget(item.type)}
           className="text-left px-2 py-1.5 text-[11px] hover:bg-[#1a1a1a] hover:text-[var(--amber)] flex justify-between"
         >
-          <span>{item.label}</span>
+          <span>{navLabel(item.type)}</span>
           <span className="dim text-[9px]">{item.key}</span>
         </button>
       ))}
@@ -44,7 +45,7 @@ export default function Sidebar() {
           onClick={resetWorkspace}
           className="w-full text-left px-2 py-1.5 text-[11px] dim hover:text-[var(--down)]"
         >
-          RESET LAYOUT
+          {t("nav.reset")}
         </button>
       </div>
     </nav>

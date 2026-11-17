@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { apiGet, fmt, fmtBig } from "../../lib/api";
+import { t, type MessageKey } from "../../lib/i18n";
 import { useWidgetSymbol, type WidgetInstance } from "../../store/terminal";
 
 type InsiderTransaction = {
@@ -21,16 +22,11 @@ type InsiderTransaction = {
 };
 
 // SEC's single-letter transaction codes, the ones that actually show up in practice.
-const CODE_LABEL: Record<string, string> = {
-  P: "Open market buy",
-  S: "Open market sale",
-  A: "Grant/award",
-  M: "Option exercise",
-  G: "Gift",
-  F: "Tax withholding",
-  C: "Conversion",
-  D: "Disposition to issuer",
-};
+const CODE_KEYS = ["P", "S", "A", "M", "G", "F", "C", "D"] as const;
+
+function codeLabel(code: string): string {
+  return (CODE_KEYS as readonly string[]).includes(code) ? t(`insider.code.${code}` as MessageKey) : code;
+}
 
 export default function InsiderWidget({ widget }: { widget: WidgetInstance }) {
   const symbol = useWidgetSymbol(widget);
@@ -40,45 +36,45 @@ export default function InsiderWidget({ widget }: { widget: WidgetInstance }) {
     staleTime: 3_600_000,
   });
 
-  if (error) return <div className="p-2 down">Error: {(error as Error).message}</div>;
-  if (isLoading) return <div className="p-2 dim">Loading insider transactions for {symbol}…</div>;
+  if (error) return <div className="p-2 down">{t("common.error", { message: (error as Error).message })}</div>;
+  if (isLoading) return <div className="p-2 dim">{t("insider.loading", { symbol })}</div>;
 
   return (
     <div>
       <table className="data-table">
         <thead>
           <tr>
-            <th>Date</th>
-            <th>Insider</th>
-            <th>Title</th>
-            <th>Type</th>
-            <th>Shares</th>
-            <th>Price</th>
-            <th>Value</th>
-            <th>Owned After</th>
+            <th>{t("insider.date")}</th>
+            <th>{t("insider.insider")}</th>
+            <th>{t("insider.title")}</th>
+            <th>{t("insider.type")}</th>
+            <th>{t("insider.shares")}</th>
+            <th>{t("insider.price")}</th>
+            <th>{t("insider.value")}</th>
+            <th>{t("insider.ownedAfter")}</th>
           </tr>
         </thead>
         <tbody>
-          {data.map((t, i) => (
-            <tr key={`${t.ownerName}-${t.transactionDate}-${i}`}>
-              <td className="!text-left dim whitespace-nowrap">{t.transactionDate}</td>
-              <td className="!text-left">{t.ownerName}</td>
-              <td className="!text-left dim truncate max-w-[140px]" title={t.ownerTitle ?? ""}>
-                {t.ownerTitle ?? (t.isDirector ? "Director" : t.isTenPercentOwner ? "10%+ Owner" : "—")}
+          {data.map((row, i) => (
+            <tr key={`${row.ownerName}-${row.transactionDate}-${i}`}>
+              <td className="!text-left dim whitespace-nowrap">{row.transactionDate}</td>
+              <td className="!text-left">{row.ownerName}</td>
+              <td className="!text-left dim truncate max-w-[140px]" title={row.ownerTitle ?? ""}>
+                {row.ownerTitle ?? (row.isDirector ? t("insider.director") : row.isTenPercentOwner ? t("insider.tenPercent") : "—")}
               </td>
-              <td className={t.acquiredDisposed === "A" ? "up" : t.acquiredDisposed === "D" ? "down" : "dim"}>
-                {CODE_LABEL[t.transactionCode] ?? t.transactionCode}
+              <td className={row.acquiredDisposed === "A" ? "up" : row.acquiredDisposed === "D" ? "down" : "dim"}>
+                {codeLabel(row.transactionCode)}
               </td>
-              <td>{fmtBig(t.shares)}</td>
-              <td>{fmt(t.pricePerShare)}</td>
-              <td>{fmtBig(t.value)}</td>
-              <td className="dim">{fmtBig(t.sharesOwnedAfter)}</td>
+              <td>{fmtBig(row.shares)}</td>
+              <td>{fmt(row.pricePerShare)}</td>
+              <td>{fmtBig(row.value)}</td>
+              <td className="dim">{fmtBig(row.sharesOwnedAfter)}</td>
             </tr>
           ))}
           {data.length === 0 && (
             <tr>
               <td colSpan={8} className="dim p-3">
-                No recent open-market insider transactions for {symbol}.
+                {t("insider.empty", { symbol })}
               </td>
             </tr>
           )}

@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { apiGet } from "../../lib/api";
+import { formatDateTime, t } from "../../lib/i18n";
 import { isSafeHttpUrl } from "../../lib/links";
 import { useWidgetSymbol, type WidgetInstance } from "../../store/terminal";
 
@@ -25,17 +26,17 @@ export default function NewsWidget({ widget }: { widget: WidgetInstance }) {
           {symbol}
         </button>
         <button className={`term-btn ${mode === "global" ? "active" : ""}`} onClick={() => setMode("global")}>
-          GLOBAL
+          {t("news.global")}
         </button>
       </div>
-      {isLoading && <div className="p-2 dim">Loading news…</div>}
+      {isLoading && <div className="p-2 dim">{t("news.loading")}</div>}
       {data.map((n, i) => {
         const body = (
           <>
             <div className="truncate">{n.title}</div>
             <div className="dim text-[10px]">
               {n.publisher}
-              {n.publishedAt ? " · " + new Date(n.publishedAt).toLocaleString() : ""}
+              {n.publishedAt ? " · " + formatDateTime(n.publishedAt) : ""}
             </div>
           </>
         );

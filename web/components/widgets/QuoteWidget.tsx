@@ -2,6 +2,7 @@
 
 import { useQuery } from "@tanstack/react-query";
 import { apiGet, fmt, fmtBig, pctClass, type Quote } from "../../lib/api";
+import { t } from "../../lib/i18n";
 import { useWidgetSymbol, type WidgetInstance } from "../../store/terminal";
 import Flash from "../Flash";
 
@@ -21,27 +22,29 @@ export default function QuoteWidget({ widget }: { widget: WidgetInstance }) {
     staleTime: 3_600_000,
   });
 
-  if (error) return <div className="p-2 down">Error: {(error as Error).message}</div>;
-  if (!data) return <div className="p-2 dim">Loading {symbol}…</div>;
+  if (error) return <div className="p-2 down">{t("common.error", { message: (error as Error).message })}</div>;
+  if (!data) return <div className="p-2 dim">{t("quote.loading", { symbol })}</div>;
 
-  const rows: Array<[string, string, string?]> = [
-    ["Open", fmt(data.open)],
-    ["High", fmt(data.high)],
-    ["Low", fmt(data.low)],
-    ["Prev Close", fmt(data.previousClose)],
-    ["Bid", fmt(data.bid)],
-    ["Ask", fmt(data.ask)],
-    ["Volume", fmtBig(data.volume)],
-    ["Avg Vol 3M", fmtBig(data.avgVolume)],
-    ...(shortVol ? ([["Short Vol %", fmt(shortVol.shortVolumePercent, 1) + "%"]] as Array<[string, string]>) : []),
-    ["Mkt Cap", fmtBig(data.marketCap)],
-    ["P/E (ttm)", fmt(data.pe)],
-    ["EPS (ttm)", fmt(data.eps)],
-    ["Div Yield", data.dividendYield !== null ? fmt(data.dividendYield * 100) + "%" : "—"],
-    ["52W High", fmt(data.week52High)],
-    ["52W Low", fmt(data.week52Low)],
-    ["Beta", fmt(data.beta)],
-    ["Shares Out", fmtBig(data.sharesOutstanding)],
+  const rows: Array<{ label: string; value: string; title?: string }> = [
+    { label: t("quote.open"), value: fmt(data.open) },
+    { label: t("quote.high"), value: fmt(data.high) },
+    { label: t("quote.low"), value: fmt(data.low) },
+    { label: t("quote.prevClose"), value: fmt(data.previousClose) },
+    { label: t("quote.bid"), value: fmt(data.bid), title: t("quote.bidHint") },
+    { label: t("quote.ask"), value: fmt(data.ask), title: t("quote.askHint") },
+    { label: t("quote.volume"), value: fmtBig(data.volume) },
+    { label: t("quote.avgVolume"), value: fmtBig(data.avgVolume) },
+    ...(shortVol
+      ? [{ label: t("quote.shortVol"), value: fmt(shortVol.shortVolumePercent, 1) + "%", title: t("quote.shortHint") }]
+      : []),
+    { label: t("quote.marketCap"), value: fmtBig(data.marketCap) },
+    { label: t("quote.pe"), value: fmt(data.pe), title: t("quote.peHint") },
+    { label: t("quote.eps"), value: fmt(data.eps), title: t("quote.epsHint") },
+    { label: t("quote.divYield"), value: data.dividendYield !== null ? fmt(data.dividendYield * 100) + "%" : "—" },
+    { label: t("quote.high52"), value: fmt(data.week52High) },
+    { label: t("quote.low52"), value: fmt(data.week52Low) },
+    { label: t("quote.beta"), value: fmt(data.beta), title: t("quote.betaHint") },
+    { label: t("quote.shares"), value: fmtBig(data.sharesOutstanding) },
   ];
 
   return (
@@ -58,10 +61,10 @@ export default function QuoteWidget({ widget }: { widget: WidgetInstance }) {
       </div>
       <div className="dim text-[11px] mb-2 truncate">{data.name}</div>
       <div className="grid grid-cols-2 gap-x-4">
-        {rows.map(([label, value]) => (
-          <div key={label} className="flex justify-between border-b border-[#161616] py-0.5">
-            <span className="dim">{label}</span>
-            <span>{value}</span>
+        {rows.map((row) => (
+          <div key={row.label} className="flex justify-between border-b border-[#161616] py-0.5">
+            <span className="dim" title={row.title}>{row.label}</span>
+            <span>{row.value}</span>
           </div>
         ))}
       </div>

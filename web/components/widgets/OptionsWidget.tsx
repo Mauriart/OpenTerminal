@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { apiGet, fmt, fmtBig } from "../../lib/api";
+import { t } from "../../lib/i18n";
 import { useWidgetSymbol, type WidgetInstance } from "../../store/terminal";
 
 type OptionRow = {
@@ -28,11 +29,11 @@ export default function OptionsWidget({ widget }: { widget: WidgetInstance }) {
   if (error)
     return (
       <div className="p-2">
-        <div className="down">Option chain unavailable for {symbol}</div>
+        <div className="down">{t("options.unavailable", { symbol })}</div>
         <div className="dim">{(error as Error).message}</div>
       </div>
     );
-  if (isLoading || !data) return <div className="p-2 dim">Loading option chain…</div>;
+  if (isLoading || !data) return <div className="p-2 dim">{t("options.loading")}</div>;
 
   const byStrike = new Map<number, { call?: OptionRow; put?: OptionRow }>();
   for (const c of data.calls) if (c.strike !== null) byStrike.set(c.strike, { ...byStrike.get(c.strike), call: c });
@@ -42,9 +43,9 @@ export default function OptionsWidget({ widget }: { widget: WidgetInstance }) {
   return (
     <div>
       <div className="flex gap-2 items-center p-1">
-        <span className="dim">Underlying</span>
+        <span className="dim">{t("options.underlying")}</span>
         <span className="amber font-bold">{fmt(data.underlyingPrice)}</span>
-        <span className="dim ml-2">Expiry</span>
+        <span className="dim ml-2">{t("options.expiry")}</span>
         <select
           value={expiry ?? data.selectedDate ?? ""}
           onChange={(e) => setExpiry(e.target.value)}
@@ -57,14 +58,14 @@ export default function OptionsWidget({ widget }: { widget: WidgetInstance }) {
       <table className="data-table">
         <thead>
           <tr>
-            <th colSpan={5} className="!text-center up">CALLS</th>
-            <th className="!text-center">STRIKE</th>
-            <th colSpan={5} className="!text-center down">PUTS</th>
+            <th colSpan={5} className="!text-center up" title={t("options.callsHint")}>{t("options.calls")}</th>
+            <th className="!text-center" title={t("options.strikeHint")}>{t("options.strike")}</th>
+            <th colSpan={5} className="!text-center down" title={t("options.putsHint")}>{t("options.puts")}</th>
           </tr>
           <tr>
-            <th>Last</th><th>Bid</th><th>Ask</th><th>Vol</th><th>OI · IV</th>
+            <th>{t("options.last")}</th><th title={t("quote.bidHint")}>{t("options.bid")}</th><th title={t("quote.askHint")}>{t("options.ask")}</th><th>{t("options.vol")}</th><th title={t("options.oiIvHint")}>{t("options.oiIv")}</th>
             <th></th>
-            <th>Last</th><th>Bid</th><th>Ask</th><th>Vol</th><th>OI · IV</th>
+            <th>{t("options.last")}</th><th title={t("quote.bidHint")}>{t("options.bid")}</th><th title={t("quote.askHint")}>{t("options.ask")}</th><th>{t("options.vol")}</th><th title={t("options.oiIvHint")}>{t("options.oiIv")}</th>
           </tr>
         </thead>
         <tbody>

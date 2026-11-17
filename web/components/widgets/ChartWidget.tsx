@@ -13,6 +13,7 @@ import {
   type UTCTimestamp,
 } from "lightweight-charts";
 import { apiGet, fmt, fmtBig, type Candle } from "../../lib/api";
+import { dateLocale, t, type MessageKey } from "../../lib/i18n";
 import { sma, ema, vwap, rsi, macd, bollinger, type Point } from "../../lib/indicators";
 import { useWidgetSymbol, type WidgetInstance } from "../../store/terminal";
 
@@ -132,6 +133,7 @@ export default function ChartWidget({ widget }: { widget: WidgetInstance }) {
 
     const chart = createChart(el, {
       layout: { background: { color: "#0a0a0a" }, textColor: "#808080", fontSize: 10, attributionLogo: false },
+      localization: { locale: dateLocale },
       grid: { vertLines: { color: "#1a1a1a" }, horzLines: { color: "#1a1a1a" } },
       crosshair: { mode: 0 },
       timeScale: { borderColor: "#262626", timeVisible: range === "1D" || range === "5D" },
@@ -236,24 +238,34 @@ export default function ChartWidget({ widget }: { widget: WidgetInstance }) {
     <div className="flex flex-col h-full">
       <div className="flex gap-1 p-1 flex-wrap shrink-0">
         {RANGES.map((r) => (
-          <button key={r} className={`term-btn ${range === r ? "active" : ""}`} onClick={() => setRange(r)}>
+          <button
+            key={r}
+            title={t(`chart.range.${r}` as MessageKey)}
+            className={`term-btn ${range === r ? "active" : ""}`}
+            onClick={() => setRange(r)}
+          >
             {r}
           </button>
         ))}
         <span className="w-2" />
-        {CHART_TYPES.map((t) => (
-          <button key={t} className={`term-btn ${chartType === t ? "active" : ""}`} onClick={() => setChartType(t)}>
-            {t.toUpperCase()}
+        {CHART_TYPES.map((type) => (
+          <button key={type} className={`term-btn ${chartType === type ? "active" : ""}`} onClick={() => setChartType(type)}>
+            {t(`chart.${type}` as MessageKey)}
           </button>
         ))}
         <span className="w-2" />
         {INDICATORS.map((ind) => (
-          <button key={ind} className={`term-btn ${active.has(ind) ? "active" : ""}`} onClick={() => toggleIndicator(ind)}>
+          <button
+            key={ind}
+            title={t(`chart.indicator.${ind}` as MessageKey)}
+            className={`term-btn ${active.has(ind) ? "active" : ""}`}
+            onClick={() => toggleIndicator(ind)}
+          >
             {ind}
           </button>
         ))}
       </div>
-      {error && <div className="p-2 down">Error: {(error as Error).message}</div>}
+      {error && <div className="p-2 down">{t("common.error", { message: (error as Error).message })}</div>}
       <div className="relative flex-1 min-h-0">
         {legend && (
           <div className="absolute top-1 left-2 z-10 flex flex-col gap-0.5 text-[11px] pointer-events-none bg-[rgba(10,10,10,0.7)] px-2 py-1 rounded max-w-[95%]">
@@ -262,7 +274,7 @@ export default function ChartWidget({ widget }: { widget: WidgetInstance }) {
               <span className="dim">H <span className="up">{fmt(legend.high)}</span></span>
               <span className="dim">L <span className="down">{fmt(legend.low)}</span></span>
               <span className="dim">C <span className={legend.close >= legend.open ? "up" : "down"}>{fmt(legend.close)}</span></span>
-              <span className="dim">Vol <span className="text-[var(--text)]">{fmtBig(legend.volume)}</span></span>
+              <span className="dim">{t("chart.vol")} <span className="text-[var(--text)]">{fmtBig(legend.volume)}</span></span>
             </div>
             {indicatorRows.length > 0 && (
               <div className="flex gap-3 flex-wrap">

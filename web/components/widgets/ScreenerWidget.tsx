@@ -3,6 +3,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { apiGet, fmt, fmtBig, pctClass } from "../../lib/api";
+import { marketLabel, t } from "../../lib/i18n";
 import { useTerminal } from "../../store/terminal";
 import Flash from "../Flash";
 
@@ -61,32 +62,34 @@ export default function ScreenerWidget() {
         <div className="flex gap-1">
           {(["us", "eu"] as const).map((m) => (
             <button key={m} className={`term-btn ${market === m ? "active" : ""}`} onClick={() => setMarket(m)}>
-              {m.toUpperCase()}
+              {marketLabel(m)}
             </button>
           ))}
         </div>
         <select value={sector} onChange={(e) => setSector(e.target.value)}>
-          <option value="">All sectors</option>
+          <option value="">{t("screener.allSectors")}</option>
           {sectors.map((s) => (
             <option key={s} value={s}>{s}</option>
           ))}
         </select>
-        <input className="w-20" placeholder="Chg% min" value={changeMin} onChange={(e) => setChangeMin(e.target.value)} />
-        <input className="w-24" placeholder="MCap min ($B)" value={marketCapMinB} onChange={(e) => setMarketCapMinB(e.target.value)} />
-        <input className="w-24" placeholder="Vol min (M)" value={volumeMinM} onChange={(e) => setVolumeMinM(e.target.value)} />
-        <span className="dim ml-auto">{isLoading ? "…" : `${data.length} results`}</span>
+        <input className="w-20" placeholder={t("screener.changeMin")} title={t("screener.changeMinHint")} value={changeMin} onChange={(e) => setChangeMin(e.target.value)} />
+        <input className="w-24" placeholder={t("screener.mcapMin")} title={t("screener.mcapMinHint")} value={marketCapMinB} onChange={(e) => setMarketCapMinB(e.target.value)} />
+        <input className="w-24" placeholder={t("screener.volMin")} title={t("screener.volMinHint")} value={volumeMinM} onChange={(e) => setVolumeMinM(e.target.value)} />
+        <span className="dim ml-auto">
+          {isLoading ? "…" : t(data.length === 1 ? "screener.resultOne" : "screener.resultOther", { count: data.length })}
+        </span>
       </div>
-      {error && <div className="p-2 down">Error: {(error as Error).message}</div>}
+      {error && <div className="p-2 down">{t("common.error", { message: (error as Error).message })}</div>}
       <table className="data-table">
         <thead>
           <tr>
-            {th("symbol", "Sym")}
-            <th>Name</th>
-            <th>Sector</th>
-            {th("price", "Last")}
-            {th("changePercent", "Chg%")}
-            {th("volume", "Vol")}
-            {th("marketCap", "MCap")}
+            {th("symbol", t("screener.sym"))}
+            <th>{t("screener.name")}</th>
+            <th>{t("screener.sector")}</th>
+            {th("price", t("screener.last"))}
+            {th("changePercent", t("screener.chg"))}
+            {th("volume", t("screener.vol"))}
+            {th("marketCap", t("screener.mcap"))}
           </tr>
         </thead>
         <tbody>
