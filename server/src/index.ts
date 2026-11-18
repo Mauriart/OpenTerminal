@@ -3,6 +3,7 @@ import cors from "cors";
 import { marketRouter } from "./routes/market.js";
 import { portfolioRouter } from "./routes/portfolio.js";
 import { aiRouter } from "./routes/ai.js";
+import { daytradeRouter } from "./routes/daytrade.js";
 import { allStats } from "./providers/registry.js";
 import { requireApiKey } from "./auth.js";
 import { rateLimit } from "./rateLimit.js";
@@ -35,6 +36,15 @@ app.use(express.json());
 // hundreds of outbound calls per request — see getQuotes) fast enough to get
 // this deployment's IP rate-limited or banned by Nasdaq/Yahoo/Stooq/SEC.
 app.use("/api", rateLimit({ windowMs: 60_000, max: 240 }), marketRouter);
+// Day-trade tools shell out to the vendored Python pack and fan out to free
+// data sources, so they sit behind the API key and a tighter limit. Nothing
+// in this router can place a live order.
+app.use(
+  "/api/daytrade",
+  requireApiKey,
+  rateLimit({ windowMs: 60_000, max: 30 }),
+  daytradeRouter
+);
 // Portfolio data and the paid AI endpoint require a shared secret; see auth.ts.
 app.use("/api/portfolios", requireApiKey, portfolioRouter);
 app.use(

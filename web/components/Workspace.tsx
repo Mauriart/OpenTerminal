@@ -22,6 +22,13 @@ import CalendarWidget from "./widgets/CalendarWidget";
 import InsiderWidget from "./widgets/InsiderWidget";
 import TvWidget from "./widgets/TvWidget";
 import RecapWidget from "./widgets/RecapWidget";
+import DayScanWidget from "./widgets/DayScanWidget";
+import DayPlanWidget from "./widgets/DayPlanWidget";
+import DayTimeWidget from "./widgets/DayTimeWidget";
+import DayRiskWidget from "./widgets/DayRiskWidget";
+import DayAlertsWidget from "./widgets/DayAlertsWidget";
+import DayAnalystWidget from "./widgets/DayAnalystWidget";
+import DayCongressWidget from "./widgets/DayCongressWidget";
 import WidgetErrorBoundary from "./WidgetErrorBoundary";
 
 const Grid = WidthProvider(GridLayout);
@@ -43,6 +50,13 @@ function WidgetBody({ widget }: { widget: WidgetInstance }) {
     case "insider": return <InsiderWidget widget={widget} />;
     case "tv": return <TvWidget />;
     case "recap": return <RecapWidget />;
+    case "dtscan": return <DayScanWidget />;
+    case "dtplan": return <DayPlanWidget widget={widget} />;
+    case "dttime": return <DayTimeWidget widget={widget} />;
+    case "dtrisk": return <DayRiskWidget widget={widget} />;
+    case "dtalerts": return <DayAlertsWidget widget={widget} />;
+    case "dtanalyst": return <DayAnalystWidget widget={widget} />;
+    case "dtcongress": return <DayCongressWidget />;
   }
 }
 
@@ -100,7 +114,7 @@ export default function Workspace() {
   const toggleLinked = useTerminal((s) => s.toggleLinked);
   const activeSymbol = useTerminal((s) => s.activeSymbol);
 
-  const symbolAware = new Set(["quote", "chart", "news", "options", "insider"]);
+  const symbolAware = new Set(["quote", "chart", "news", "options", "insider", "dtplan", "dttime", "dtrisk", "dtalerts", "dtanalyst"]);
 
   return (
     <Grid

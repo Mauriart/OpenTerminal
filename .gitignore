@@ -8,6 +8,7 @@ out/
 .DS_Store
 
 
-# Database
+# Database and local day-trade state (alerts, paper journal db)
 data/*.db*
 data/.api-key
+data/daytrade/
