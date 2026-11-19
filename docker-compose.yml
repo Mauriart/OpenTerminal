@@ -18,6 +18,9 @@ services:
       # the web service (see README > Security defaults) — otherwise a caller
       # could forge X-Forwarded-For to dodge the /api/ai rate limit.
       - TRUST_PROXY=${TRUST_PROXY:-}
+      # Name and email for SEC EDGAR (analyst and filing headlines). Example:
+      # SEC_USER_AGENT=Maria Lopez maria@example.com
+      - SEC_USER_AGENT=${SEC_USER_AGENT:-}
     volumes:
       - terminal-data:/app/data
     restart: unless-stopped

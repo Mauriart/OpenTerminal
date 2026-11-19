@@ -1,4 +1,6 @@
 > **Fork en español.** Esta versión de OpenTerminal muestra la interfaz en español neutro de Latinoamérica: títulos, botones, filtros, estados vacíos, atajos y el asistente de IA. Los términos de mercado habituales (ticker, RSI, MACD, VWAP, Bollinger, OHLC, P/E, bid/ask) se mantienen, con una pista en español cuando ayuda. Los datos externos —titulares y nombres de empresas— no se traducen. El idioma por defecto está en `web/lib/i18n.ts` (`locale`); cámbialo a `"en"` para volver al inglés.
+>
+> **Práctica de day trading.** El grupo «Day trade» de la barra lateral agrega siete paneles (escáner, plan, máquina del tiempo, tamaño y riesgo, alertas, analista y operaciones del Congreso) sobre el pack MIT [day-trader-skill](https://github.com/jakeschincariol/day-trader-skill), vendido sin cambios en `vendor/day-trader-skill` (commit `3d0f4ef`). El servidor los ejecuta con Python 3, sin shell y sin API de pago. El único «bróker» es un diario simulado en SQLite: no se envía ninguna orden. Para los informes de la SEC define `SEC_USER_AGENT="Tu Nombre tu@correo.com"`.
 
 <div align="center">
 
@@ -136,6 +138,16 @@ npm run dev
 ```
 
 Without a key, everything else still works — the AI widget just shows a friendly "unavailable" message instead of failing.
+
+### Day-trade practice
+
+The sidebar group **Day trade** needs Python 3.8+ (`python3` on `PATH`). Nothing to `pip install`: the tools are the vendored MIT pack in `vendor/day-trader-skill`. The API spawns them with `shell: false` and a whitelist of arguments.
+
+```bash
+export SEC_USER_AGENT="Your Name you@example.com"
+```
+
+That header is what SEC EDGAR requires. The earnings analyst refuses to run without it. Headlines, the scanner, the plan, the time machine, sizing, alerts and the House Clerk index do not need it. A saved ticket is a row in SQLite (`paper_trades`, status `SIMULATED`). The server never contacts a broker.
 
 Two optional knobs for the assistant, both standard for the Anthropic SDK:
 

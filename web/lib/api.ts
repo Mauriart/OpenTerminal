@@ -1,7 +1,9 @@
 import { translateApiError } from "./i18n";
 
-function errorFromResponse(status: number, body: { error?: string }): Error {
-  return new Error(translateApiError(body.error ?? `HTTP ${status}`));
+function errorFromResponse(status: number, body: { error?: string; detail?: string }): Error {
+  const message = translateApiError(body.error ?? `HTTP ${status}`);
+  if (body.detail && body.error === "daytrade tool failed") return new Error(`${message} (${body.detail})`);
+  return new Error(message);
 }
 
 export async function apiGet<T>(path: string): Promise<T> {
