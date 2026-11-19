@@ -1,4 +1,5 @@
 import type { Quote, Candle } from "./yahoo.js";
+import { expectedQuoteSession, overlayLatestClose, parseNasdaqTradeDate, quoteIsBehind } from "./candles.js";
 
 const UA = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36";
 const HEADERS = { "User-Agent": UA, Accept: "application/json", Origin: "https://www.nasdaq.com", Referer: "https://www.nasdaq.com/" };
@@ -50,6 +51,15 @@ const KNOWN_ETFS = new Set([
 // the process lifetime to avoid a lookup on every quote/history request.
 const assetClassCache = new Map<string, "stocks" | "etf">();
 
+// A corrected close is good for a minute. Quote widgets poll every second;
+// this avoids re-downloading the chart on each poll while Nasdaq's last sale lags.
+const fixedQuotes = new Map<string, { expires: number; expected: string; quote: Quote }>();
+
+export function resetNasdaqCachesForTests(): void {
+  assetClassCache.clear();
+  fixedQuotes.clear();
+}
+
 async function resolveAssetClass(symbol: string): Promise<"stocks" | "etf"> {
   const sym = symbol.toUpperCase();
   const cached = assetClassCache.get(sym);
@@ -71,6 +81,10 @@ async function resolveAssetClass(symbol: string): Promise<"stocks" | "etf"> {
 }
 
 export async function quote(symbol: string): Promise<Quote> {
+  const expected = expectedQuoteSession();
+  const cachedFix = fixedQuotes.get(symbol);
+  if (cachedFix && cachedFix.expected === expected && cachedFix.expires > Date.now()) return cachedFix.quote;
+
   const assetclass = await resolveAssetClass(symbol);
   const [info, summary] = await Promise.all([
     nfetch(`https://api.nasdaq.com/api/quote/${encodeURIComponent(symbol)}/info?assetclass=${assetclass}`),
@@ -91,7 +105,7 @@ export async function quote(symbol: string): Promise<Quote> {
   const avgVolume = money(summary?.summaryData?.AverageVolume?.value?.replace(/,/g, ""));
   const yieldPct = summary?.summaryData?.Yield?.value ? Number(String(summary.summaryData.Yield.value).replace("%", "")) : null;
 
-  return {
+  const built: Quote = {
     symbol,
     name: info.companyName ?? null,
     price,
@@ -119,6 +133,22 @@ export async function quote(symbol: string): Promise<Quote> {
     time: null,
     source: "nasdaq",
   };
+
+  // The info endpoint can keep yesterday's last sale after the chart has the
+  // newer official close. Prefer that close instead of publishing both.
+  const tradeDate = parseNasdaqTradeDate(info.primaryData?.lastTradeTimestamp);
+  if (!quoteIsBehind(tradeDate, expected)) return built;
+
+  let candles: Candle[] = [];
+  try {
+    candles = await history(symbol, "5D");
+  } catch {
+    throw new Error("nasdaq quote lags the latest close");
+  }
+  const fixed = overlayLatestClose(built, candles, expected);
+  if (!fixed) throw new Error("nasdaq quote lags the latest close");
+  fixedQuotes.set(symbol, { expires: Date.now() + 60_000, expected, quote: fixed });
+  return fixed;
 }
 
 function fmtDate(d: Date): string {
