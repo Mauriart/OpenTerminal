@@ -130,6 +130,20 @@ npm run dev
 
 That's it — no `.env` file required to get a fully working terminal.
 
+## Arranque con doble clic
+
+Si no quieres usar la terminal, abre OpenTerminal con doble clic. Hace falta [Node.js 22 o 24](https://nodejs.org/es/download) y [Python 3](https://www.python.org/downloads/). La primera vez pregunta «Tu nombre y correo para la SEC» y lo guarda en `.openterminal.local`, que no se sube a git. Cuando http://localhost:3000 responde, se abre el navegador. Si ya estaba abierto, solo abre el navegador.
+
+- **Windows:** `Iniciar OpenTerminal.bat`
+- **Mac:** `Iniciar OpenTerminal.command`
+- **Linux:** `iniciar-openterminal.sh`
+
+Para apagar, cierra esa ventana. En la ventana dice: «Cierra esta ventana para apagar OpenTerminal».
+
+**Windows:** si SmartScreen dice que protegió tu PC, pulsa «Más información» y luego «Ejecutar de todas formas».
+
+**Mac:** la primera vez Gatekeeper puede bloquear el archivo. Clic derecho sobre `Iniciar OpenTerminal.command` → «Abrir» → «Abrir». Si no arranca, en Terminal, dentro de la carpeta del proyecto: `chmod +x "Iniciar OpenTerminal.command" iniciar-openterminal.sh` y vuelve a abrirlo.
+
 ### Optional: AI assistant
 
 ```bash

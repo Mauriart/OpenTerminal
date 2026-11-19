@@ -5,6 +5,7 @@ import GridLayout, { WidthProvider } from "react-grid-layout";
 import "react-grid-layout/css/styles.css";
 import "react-resizable/css/styles.css";
 import { t, widgetTitle } from "../lib/i18n";
+import { layoutsEqual, mergeLayout } from "../lib/layout";
 import { normalizeSymbol } from "../lib/symbol";
 import { useTerminal, type WidgetInstance } from "../store/terminal";
 import QuoteWidget from "./widgets/QuoteWidget";
@@ -109,10 +110,31 @@ function SymbolTag({ widget, activeSymbol }: { widget: WidgetInstance; activeSym
 export default function Workspace() {
   const widgets = useTerminal((s) => s.widgets);
   const layout = useTerminal((s) => s.layout);
-  const setLayout = useTerminal((s) => s.setLayout);
   const removeWidget = useTerminal((s) => s.removeWidget);
   const toggleLinked = useTerminal((s) => s.toggleLinked);
   const activeSymbol = useTerminal((s) => s.activeSymbol);
+  const pendingScrollId = useTerminal((s) => s.pendingScrollId);
+  const clearPendingScroll = useTerminal((s) => s.clearPendingScroll);
+
+  useEffect(() => {
+    if (!pendingScrollId) return;
+    const id = pendingScrollId;
+    let frames = 0;
+    let raf = 0;
+    const tick = () => {
+      const el = document.querySelector(`[data-widget-id="${id}"]`);
+      const height = el?.getBoundingClientRect().height ?? 0;
+      if (el && height > 40) {
+        el.scrollIntoView({ behavior: "smooth", block: "start" });
+        clearPendingScroll();
+        return;
+      }
+      if (frames++ < 30) raf = requestAnimationFrame(tick);
+      else clearPendingScroll();
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [pendingScrollId, widgets, layout, clearPendingScroll]);
 
   const symbolAware = new Set(["quote", "chart", "news", "options", "insider", "dtplan", "dttime", "dtrisk", "dtalerts", "dtanalyst"]);
 
@@ -124,10 +146,14 @@ export default function Workspace() {
       rowHeight={30}
       margin={[4, 4]}
       draggableHandle=".panel-title"
-      onLayoutChange={(l) => setLayout(l.map(({ i, x, y, w, h }) => ({ i, x, y, w, h })))}
+      onLayoutChange={(l) => {
+        const state = useTerminal.getState();
+        const merged = mergeLayout(state.layout, l, state.widgets.map((w) => w.id));
+        if (!layoutsEqual(state.layout, merged)) state.setLayout(merged);
+      }}
     >
       {widgets.map((w) => (
-        <div key={w.id}>
+        <div key={w.id} data-widget-id={w.id}>
           <div className="terminal-panel">
             <div className="panel-title">
               <span>

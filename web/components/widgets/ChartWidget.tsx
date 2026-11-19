@@ -13,6 +13,7 @@ import {
   type UTCTimestamp,
 } from "lightweight-charts";
 import { apiGet, fmt, fmtBig, type Candle } from "../../lib/api";
+import { preferLatestClose } from "../../lib/candles";
 import { dateLocale, t, type MessageKey } from "../../lib/i18n";
 import { sma, ema, vwap, rsi, macd, bollinger, type Point } from "../../lib/indicators";
 import { useWidgetSymbol, type WidgetInstance } from "../../store/terminal";
@@ -41,12 +42,22 @@ export default function ChartWidget({ widget }: { widget: WidgetInstance }) {
   const [legend, setLegend] = useState<Candle | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
+  const seriesRef = useRef<{ key: string; candles: Candle[] }>({ key: "", candles: [] });
 
-  const { data: candles, error } = useQuery({
+  const { data: fetchedCandles, error } = useQuery({
     queryKey: ["history", symbol, range],
     queryFn: () => apiGet<Candle[]>(`/api/history/${encodeURIComponent(symbol)}?range=${range}`),
     refetchInterval: range === "1D" ? 8_000 : 60_000,
   });
+
+  const seriesKey = `${symbol}|${range}`;
+  const candles = useMemo(() => {
+    if (!fetchedCandles) return undefined;
+    const prev = seriesRef.current.key === seriesKey ? seriesRef.current.candles : null;
+    const chosen = preferLatestClose(prev, fetchedCandles);
+    seriesRef.current = { key: seriesKey, candles: chosen };
+    return chosen;
+  }, [fetchedCandles, seriesKey]);
 
   // Fast time -> candle lookup for the crosshair legend, independent of chart type.
   const byTime = useMemo(() => {

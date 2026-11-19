@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { cached, cacheGet, cacheStore, staleGet } from "../cache.js";
-import { withFallback } from "../providers/registry.js";
+import { tracked, withFallback } from "../providers/registry.js";
+import { expectedQuoteSession, normalizeCandles, preferLatest, seriesTradingDate } from "../providers/candles.js";
 import * as yahoo from "../providers/yahoo.js";
 import * as stooq from "../providers/stooq.js";
 import * as nasdaq from "../providers/nasdaq.js";
@@ -227,6 +228,35 @@ marketRouter.get("/quotes", async (req, res) => {
 
 // ---- history / candles ----
 
+/**
+ * First provider that reaches the latest session wins. A later refresh that
+ * only has the previous close does not replace it — that swap was the 5D
+ * last-price flicker (Nov 17 close vs Nov 18 close) while the market was closed.
+ */
+async function equityHistory(symbol: string, rangeKey: string): Promise<yahoo.Candle[]> {
+  const previous = staleGet<yahoo.Candle[]>(`history:${symbol}:${rangeKey}`) ?? null;
+  const attempts: Array<[string, () => Promise<yahoo.Candle[]>]> = [
+    ["nasdaq", () => nasdaq.history(symbol, rangeKey)],
+    ["yahoo", () => yahoo.history(symbol, yahooRange(rangeKey).range, yahooRange(rangeKey).interval)],
+    ["stooq", () => stooq.history(symbol)],
+  ];
+  const wantThrough = expectedQuoteSession();
+  let best: yahoo.Candle[] | null = null;
+  let lastErr: unknown = new Error("empty history");
+  for (const [name, fn] of attempts) {
+    try {
+      const candles = normalizeCandles(await tracked(name, fn));
+      if (candles.length === 0) throw new Error(`${name}: empty history`);
+      best = preferLatest(best, candles);
+      if (seriesTradingDate(best) >= wantThrough) break;
+    } catch (err) {
+      lastErr = err;
+    }
+  }
+  if (!best) throw lastErr;
+  return preferLatest(previous, best);
+}
+
 marketRouter.get("/history/:symbol", async (req, res) => {
   const symbol = req.params.symbol.toUpperCase();
   const rangeKey = String(req.query.range ?? "6M");
@@ -236,11 +266,7 @@ marketRouter.get("/history/:symbol", async (req, res) => {
         ? binance.history(symbol, rangeKey)
         : isVix(symbol)
         ? vixHistory(rangeKey)
-        : withFallback([
-            ["nasdaq", () => nasdaq.history(symbol, rangeKey)],
-            ["yahoo", () => yahoo.history(symbol, yahooRange(rangeKey).range, yahooRange(rangeKey).interval)],
-            ["stooq", () => stooq.history(symbol)],
-          ])
+        : equityHistory(symbol, rangeKey)
     );
     if (!Array.isArray(data) || data.length === 0) throw new Error("empty history from all providers");
     res.json(data);

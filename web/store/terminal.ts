@@ -2,6 +2,7 @@
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
+import { nextLayoutItem } from "../lib/layout";
 import { normalizeSymbol } from "../lib/symbol";
 
 export type WidgetType =
@@ -43,9 +44,12 @@ type TerminalState = {
   layout: LayoutItem[];
   watchlist: string[];
   commandOpen: boolean;
+  /** Widget id that should be scrolled into view after it is added. */
+  pendingScrollId: string | null;
   setActiveSymbol: (s: string) => void;
   setCommandOpen: (open: boolean) => void;
-  addWidget: (type: WidgetType, symbol?: string) => void;
+  clearPendingScroll: () => void;
+  addWidget: (type: WidgetType, symbol?: string) => string;
   removeWidget: (id: string) => void;
   setWidgetSymbol: (id: string, symbol: string) => void;
   toggleLinked: (id: string) => void;
@@ -104,21 +108,25 @@ export const useTerminal = create<TerminalState>()(
       layout: DEFAULT_LAYOUT,
       watchlist: ["AAPL", "MSFT", "NVDA", "TSLA", "AMZN", "GOOGL", "META", "SPY"],
       commandOpen: false,
+      pendingScrollId: null,
       setActiveSymbol: (s) => {
         const sym = normalizeSymbol(s);
         if (sym) set({ activeSymbol: sym });
       },
       setCommandOpen: (open) => set({ commandOpen: open }),
-      addWidget: (type, symbol) =>
+      clearPendingScroll: () => set({ pendingScrollId: null }),
+      addWidget: (type, symbol) => {
+        const id = `w-${type}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
         set((st) => {
-          const id = `w-${type}-${Date.now()}`;
           const size = SIZE_BY_TYPE[type];
-          const maxY = st.layout.reduce((m, l) => Math.max(m, l.y + l.h), 0);
           return {
             widgets: [...st.widgets, { id, type, symbol, linked: !symbol }],
-            layout: [...st.layout, { i: id, x: 0, y: maxY, ...size }],
+            layout: [...st.layout, nextLayoutItem(st.layout, id, size)],
+            pendingScrollId: id,
           };
-        }),
+        });
+        return id;
+      },
       removeWidget: (id) =>
         set((st) => ({
           widgets: st.widgets.filter((w) => w.id !== id),
@@ -144,7 +152,7 @@ export const useTerminal = create<TerminalState>()(
         }));
       },
       removeFromWatchlist: (s) => set((st) => ({ watchlist: st.watchlist.filter((x) => x !== s) })),
-      resetWorkspace: () => set({ widgets: DEFAULT_WIDGETS, layout: DEFAULT_LAYOUT }),
+      resetWorkspace: () => set({ widgets: DEFAULT_WIDGETS, layout: DEFAULT_LAYOUT, pendingScrollId: null }),
     }),
     { name: "openterminal-workspace" }
   )
