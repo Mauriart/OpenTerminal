@@ -14,11 +14,14 @@ goto no_node
 
 :have_node
 set "PYTHON_CMD="
+where py >nul 2>&1 && for /f "delims=" %%i in ('py -3 -c "import sys; print(sys.executable)" 2^>nul') do set "PYTHON_CMD=%%i"
+if defined PYTHON_CMD goto have_python
 where python3 >nul 2>&1 && python3 -c "import sys; raise SystemExit(0 if sys.version_info[0]==3 else 1)" >nul 2>&1 && set "PYTHON_CMD=python3"
 if not defined PYTHON_CMD (
   where python >nul 2>&1 && python -c "import sys; raise SystemExit(0 if sys.version_info[0]==3 else 1)" >nul 2>&1 && set "PYTHON_CMD=python"
 )
 if not defined PYTHON_CMD goto no_python
+:have_python
 set "PYTHON=%PYTHON_CMD%"
 
 curl.exe -fsS -o NUL --max-time 2 http://127.0.0.1:3000/
